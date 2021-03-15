@@ -1,83 +1,111 @@
 <html>
+  <head>
+    <script src="https://threejs.org/build/three.min.js"></script>
+    <script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+    <style>
+      #info {
+        position: absolute;
+        top: 0px;
+        width: 100%;
+        padding: 10px;
+        text-align: center;
+        color: #FFFFFF
+      }
 
-<head>
-<style>
-#info {
-  position: absolute;
-  top: 0px;
-  width: 100%;
-  padding: 10px;
-  text-align: center;
-  color: #00ffff
-}
+      body {
+        overflow: hidden;
+      }
+    </style>
+  </head>
 
-body {
-  overflow: hidden;
-}
+  <body>
+    <div id="info">minimal three.js
+    <br>
+    <button id="toggle" style="width:20%">Move/Stop</button>
+    </div>
+      
+    <script>
+      var camera, scene, renderer;
+      var clock;
+      var train;
+      var angle  = 0;
+      var pi15 = 15 * Math.PI;
+      var turn = false;
+      var tx = pi15+60;
+      var ty = 5;
+      var tz = 0;
 
+      init();
+      circleanimate();
 
-</style>
-</head>
+      $("#toggle").click(function() {
+        turn = !turn;
+      });
 
-<div id="info">minimal three.js</div>
-<script src="https://threejs.org/build/three.min.js"></script>
-<script src="https://threejs.org/examples/js/controls/OrbitControls.js"></script>
+      function init() {
 
+        scene = new THREE.Scene();
 
-<body> 
-<script>
+        clock = new THREE.Clock();
 
-var camera, scene, renderer;
-var clock;
-var train;
-var angle  = 0;
+        renderer = new THREE.WebGLRenderer();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setClearColor(0x333333);
+        document.body.appendChild(renderer.domElement);
 
-init();
-animate();
+        camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+        camera.position.set (0, 250, 250);
+        let controls = new THREE.OrbitControls(camera, renderer.domElement);
 
-function init() {
+        var gridXZ = new THREE.GridHelper(300, 20, 'red', 'white');
+        scene.add(gridXZ);
 
-  scene = new THREE.Scene();
+        ////////////////////////////////////////////////////////////////
 
-  clock = new THREE.Clock();
-  
-  renderer = new THREE.WebGLRenderer();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  renderer.setClearColor(0x888888);
-  document.body.appendChild(renderer.domElement);
-
-  camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
-  camera.position.set (0, 40, 50);
-  let controls = new THREE.OrbitControls(camera, renderer.domElement);
-
-  var gridXZ = new THREE.GridHelper(200, 20, 'red', 'white');
-  scene.add(gridXZ);
- 
- ////////////////////////////////////////////////////////////////
-   train = new THREE.Mesh (new THREE.BoxGeometry (10,10,30), new THREE.MeshNormalMaterial());
-   scene.add (train);
-}
-
-function animate() {
-  var radius = 50;
-  
-  train.position.set (radius* Math.cos(angle), 5, -radius* Math.sin(angle));
-train.rotation.y = angle;
-
-  var dt = clock.getDelta();
-  angle += 2*0.10472*dt;
-  
-  
-//  console.log (clock.getDelta());
-  
-  requestAnimationFrame(animate);
-  renderer.render(scene, camera);
-
-}
+        train = new THREE.Group;
+        let trainBody = new THREE.Mesh (new THREE.BoxGeometry (10,10,30), new THREE.MeshNormalMaterial());
+        let chimney = new THREE.Mesh (new THREE.CylinderGeometry(4,4,8,12), new THREE.MeshNormalMaterial());
+        chimney.position.set(0,10,-10);
+        train.add(trainBody, chimney);
+        scene.add (train);
+      }
 
 
-
-</script>
-</body>
-
+      function circleanimate() {
+        var radius = 60;
+        var dt = clock.getDelta();
+        
+        if(turn){
+          if(train.position.x >= pi15){
+            tx = pi15 + radius * Math.cos(angle);
+            ty = 5;
+            tz = -radius * Math.sin(angle);
+            angle += 2 * (Math.PI/4) * dt;
+          }
+          else if(train.position.x < pi15 && train.position.x > -pi15 && train.position.z > 0){
+            tx=train.position.x + 30 * Math.PI * dt;
+            ty=train.position.y;
+            tz=train.position.z;
+          }
+          else if(train.position.x <= -pi15){
+            tx=-pi15+radius* Math.cos(angle);
+            ty=5;
+            tz=-radius* Math.sin(angle);
+            angle += 2*(Math.PI/4)*dt;
+          }
+          else if(train.position.x < pi15 && train.position.x > -pi15 && train.position.z < 0){
+            tx=train.position.x - 30 * Math.PI * dt;
+            ty=train.position.y;
+            tz=train.position.z;
+          }
+        }
+          train.position.set(tx,ty,tz);
+          train.rotation.y = angle;
+        
+          requestAnimationFrame(circleanimate);
+          renderer.render(scene, camera);
+      }
+    </script>
+  </body>
 </html>
